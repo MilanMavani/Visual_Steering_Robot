@@ -1,27 +1,7 @@
-# Visual_Steering_Robot
 # 🤖 Visual Steering Robot with ROS 2 Jazzy & Arduino
 
 An autonomous four-wheeled robot platform integrating **ROS 2 Jazzy** on a **Raspberry Pi 4** and **Arduino Uno**, capable of navigating, tracking distance, and performing precise 180° turns using sensor feedback (IMU & Encoder). Built as a modular and scalable robotics stack with a hybrid control architecture.
 
----
-
-## 📌 Table of Contents
-
-- [Project Overview](#project-overview)
-- [System Architecture](#system-architecture)
-- [Hardware Used](#hardware-used)
-- [Software Stack](#software-stack)
-- [Installation Guide](#installation-guide)
-- [Control Flow](#control-flow)
-- [ROS 2 Node Descriptions](#ros-2-node-descriptions)
-- [Serial Communication](#serial-communication)
-- [Code Structure](#code-structure)
-- [Implementation Highlights](#implementation-highlights)
-- [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)
-- [License](#license)
-
----
 
 ## 🚀 Project Overview
 
@@ -36,8 +16,26 @@ This robotic system showcases a distributed control approach with:
 
 ## 🧠 System Architecture
 
-+---------------------------+ | Raspberry Pi 4 (ROS2) | +---------------------------+ | ArduinoController Node | | SerialReader Node | | IMUNode (PID Controller) | | SpeedCalculator Node | +---------------------------+ | Serial (USB) | +--------------------------+ | Arduino Uno (C++) | +--------------------------+ | Motor Driver (PWM) | | Encoder (AS5147) | | Servo Steering (PWM) | +--------------------------+
-
+```
++---------------------------+
+|    Raspberry Pi 4 (ROS2) |
++---------------------------+
+| ArduinoController Node   |
+| SerialReader Node        |
+| IMUNode (PID Controller) |
+| SpeedCalculator Node     |
++---------------------------+
+          |
+     Serial (USB)
+          |
++--------------------------+
+|     Arduino Uno (C++)   |
++--------------------------+
+| Motor Driver (PWM)      |
+| Encoder (AS5147)        |
+| Servo Steering (PWM)    |
++--------------------------+
+```
 
 ---
 
@@ -83,6 +81,101 @@ source ~/.bashrc
 
 # 4. Python Dependencies
 pip install pyserial adafruit-circuitpython-bno055 rclpy
+```
 
+### On Arduino
 
+- Upload the provided `arduino_robot_control.ino` using Arduino IDE.
+- Set baud rate to **2,000,000** for optimal performance.
+- Connect via USB to Raspberry Pi.
 
+---
+
+## 📈 Control Flow
+
+1. Waits for **start** signal from Raspberry Pi.
+2. Moves at **15 RPS** using PID control.
+3. After **8 meters**, stops for 1 second.
+4. Performs a **180° turn** using IMU data.
+5. Stops again and awaits the next command.
+
+---
+
+## 🧩 ROS 2 Node Descriptions
+
+| Node               | Function                                    |
+|--------------------|---------------------------------------------|
+| `ArduinoController` | Sends `/start`, `/stop`, `/imu_pwm` commands via serial |
+| `SerialReader`     | Publishes encoder-derived speed to `/speed` |
+| `IMUNode`          | PID-based orientation control + 180° turn logic |
+| `SpeedCalculator`  | Computes distance traveled & triggers turns  |
+
+---
+
+## 🔌 Serial Communication
+
+- **Protocol**: UART over USB (via PySerial)
+- **Speed**: 2,000,000 bps
+- **Commands**:
+  - `'1\n'`: Start
+  - `'0\n'`: Stop
+  - `1000–1700\n`: Steering PWM
+
+---
+
+## 🗂️ Code Structure
+
+```
+robotics_case_study/
+│
+├── ros2_nodes/
+│   ├── arduino_controller.py
+│   ├── serial_reader.py
+│   ├── imu_node.py
+│   └── speed_calculator.py
+│
+├── arduino/
+│   └── arduino_robot_control.ino
+│
+├── README.md
+└── wiring_diagram.png
+```
+
+---
+
+## ✨ Implementation Highlights
+
+- **Robust PID Loop**: Maintains speed regardless of load or terrain.
+- **IMU-based Precision**: 180° turn executed based on orientation change, not guesswork.
+- **Modular ROS2 Nodes**: Independent processing and easy debugging.
+- **Safe Serial Protocol**: Clean command structure, real-time bi-directional communication.
+
+---
+
+## 🚀 Future Enhancements
+
+Here are some advanced additions that can take this project to the next level:
+
+- 🔄 **Obstacle Avoidance** (Ultrasonic, LIDAR, or depth camera)
+- 🌍 **GPS Integration** for outdoor navigation
+- 📶 **Wireless Control** via Wi-Fi or MQTT
+- 🧠 **Neural Steering Models** using TensorFlow Lite on Raspberry Pi
+- 📊 **Visualization Dashboard** (RViz2 or a custom web UI)
+- 🪫 **Battery Monitoring Node** for autonomous power management
+
+---
+
+## 🤝 Contributing
+
+Pull requests and forks are welcome! Please ensure changes are well-commented and follow the structure of ROS 2 development best practices.
+
+---
+
+## 📜 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+> Developed by **Jigisha Ahirrao**, **Milankumar Mavani**, and **Rishikesh Tiwari**  
+> Guided by **Prof. Dr. Maria Elena Algorri Guzman** & **Mr. Hartmut Köhn**
